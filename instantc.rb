@@ -45,7 +45,7 @@ class InstantC
         msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
         
         if $? == 0 && File.exist?(exe)
-          result = `"#{exe} #{@argv}" 2>&1`
+          result = `"#{exe}" #{@argv} 2>&1`
           result.strip!
           puts result unless result.empty?
           puts "エラー終了しました コード: #{$? >> 8}" if $? != 0
