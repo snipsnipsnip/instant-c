@@ -6,8 +6,10 @@ hoge
 10
 10
 10
+>> char buf[80]; printf("%s", fgets(buf, 80, fopen("instantc.rb", "r")))
+#!/usr/bin/ruby
 >> return 10
 エラー終了しました コード: 10
 >> int *p=0; *p=3
-(キャッチできず強制終了する)
+(強制終了)
 >> q
