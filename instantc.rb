@@ -15,7 +15,7 @@ class InstantC
   end
 
   def start
-    puts 'exitã¨ã‹quitã¨ã‹qã¨ã‹Ctrl+Cã¨ã‹Ctrl+Zã¨ã‹ã§çµ‚äº†ã—ã¾ã™ http://j.mp/instantc'
+    puts 'exit‚Æ‚©quit‚Æ‚©q‚Æ‚©Ctrl+C‚Æ‚©Ctrl+Z‚Æ‚©‚ÅI—¹‚µ‚Ü‚· http://j.mp/instantc'
     while true
       print ">> "
       begin
@@ -29,7 +29,7 @@ class InstantC
       
       if line =~ /\A#arg[vs]?\s*=\s*/i
         @argv = $' #'
-        puts "å¼•æ•°ã‚’ #{@argv} ã«è¨­å®šã—ã¾ã—ãŸ"
+        puts "ˆø”‚ğ #{@argv} ‚Éİ’è‚µ‚Ü‚µ‚½"
         next
       end
 
@@ -47,7 +47,7 @@ class InstantC
           result = `"#{exe} #{@argv}" 2>&1`
           result.strip!
           puts result unless result.empty?
-          puts "ã‚¨ãƒ©ãƒ¼çµ‚äº†ã—ã¾ã—ãŸ ã‚³ãƒ¼ãƒ‰: #{$? >> 8}" if $? != 0
+          puts "ƒGƒ‰[I—¹‚µ‚Ü‚µ‚½ ƒR[ƒh: #{$? >> 8}" if $? != 0
         end
       end
     end
