@@ -43,6 +43,7 @@ class InstantC
         msg = `cl /W2 /EHsc /WX /Od /nologo /Fe"#{exe}" /Fo"#{f.path}.obj" /Tp"#{f.path}" 2>&1`
         puts "#{Time.now - compile_begin} sec."
         msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
+        
         if $? == 0 && File.exist?(exe)
           result = `"#{exe} #{@argv}" 2>&1`
           result.strip!
@@ -56,11 +57,11 @@ class InstantC
   private
   def header
     @header ||= begin
-      %w[stdio stdlib string ctype math time windows].map {|h| "#include <#{h}.h>" }.join("\n") +
+      %w[stdio stdlib string ctype math time windows].map {|h| "#include <#{h}.h>" } +
       %w[string vector iterator functional iostream
-        list map memory deque algorithm sstream].map {|h| "#include <#{h}>" }.join("\n") +
-      "\nint main(int argc, char **argv) {"
-    end
+        list map memory deque algorithm sstream].map {|h| "#include <#{h}>" } +
+      ["\nint main(int argc, char **argv) {"]
+    end.join("\n")
   end
 
   def footer
