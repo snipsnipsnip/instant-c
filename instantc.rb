@@ -16,10 +16,19 @@ class InstantC
     @prompt = ">> "
     @count = 0
     @pch_cflags = ''
+    @_ = nil
+    @argv = ''
+    @headers = %w[
+      stdio.h stdlib.h string.h ctype.h math.h time.h
+      windows.h
+      string vector iterator functional iostream
+      list map memory deque algorithm sstream
+    ]
+    @preface = "using namespace std;"
   end
 
   def start
-    init_pch
+    compile_pch
     puts 'exitÇ∆Ç©quitÇ∆Ç©qÇ∆Ç©Ctrl+CÇ∆Ç©Ctrl+ZÇ∆Ç©Ç≈èIóπÇµÇ‹Ç∑ http://j.mp/instantc'
     while true
       line = prompt and run line or break
@@ -32,9 +41,12 @@ class InstantC
     
     return false if line[0] == ?\C-d || line =~ /\Aexit|quit|q\z/i
     
-    if line =~ /\A#arg[vs]?\s*=\s*/i
-      @argv = $' #'
-      puts "à¯êîÇ #{@argv} Ç…ê›íËÇµÇ‹ÇµÇΩ"
+    if line =~ /\A\s*@/i
+      if $'.strip!
+        run_as_ruby $'
+      else
+        run_as_ruby line
+      end
       return true
     end
 
@@ -48,9 +60,9 @@ class InstantC
       f << header << code << footer
     end
 
-    compile_begin = Time.now
+    compile_begin = Time.now if $DEBUG
     msg = `2>&1 cl #{@cflags} #{@pch_cflags} /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src}" #{@libs}`
-    puts "#{Time.now - compile_begin} sec."
+    puts "#{Time.now - compile_begin} sec." if $DEBUG
     msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
 
     if $? == 0
@@ -63,6 +75,16 @@ class InstantC
     end
     
     true
+  end
+  
+  def run_as_ruby(line)
+    result = eval(line)
+    print "=> "
+    p result
+    @_ = result
+  rescue Exception => e
+    puts e
+    e.backtrace.each {|b| puts "  from #{b}" }
   end
   
   def gen_filename
@@ -88,23 +110,21 @@ class InstantC
     "\n;return 0;}"
   end
   
-  def init_pch
+  def compile_pch
     src = "#{gen_filename}.h"
     open(src, "w") do |f|
-      %w[stdio stdlib string ctype math time windows].each do |h|
-        f.puts "#include <#{h}.h>"
-      end
-      %w[string vector iterator functional iostream
-        list map memory deque algorithm sstream].each do |h|
+      @headers.each do |h|
         f.puts "#include <#{h}>"
       end
-      f.puts "using namespace std;"
+      f.puts @preface
     end
     
     pch = "#{src}.pch"
     pch_flags = %[/FI"#{src}" /Fp"#{pch}"]
-    system %[cl /c #{@cflags} #{pch_flags} /Yc"#{src}" /Fonul /Tpnul > nul]
+    msg = `2>&1 cl /c #{@cflags} #{pch_flags} /Yc"#{src}" /Fonul /Tpnul`
+    puts msg unless $? == 0
     @pch_cflags = %[#{pch_flags} /Yu"#{src}"]
+    msg
   end
 end
 
