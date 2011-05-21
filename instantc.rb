@@ -15,6 +15,7 @@ class InstantC
     @libs = 'user32.lib'
     @prompt = ">> "
     @count = 0
+    @pch_cflags = ''
   end
 
   def start
@@ -48,7 +49,7 @@ class InstantC
     end
 
     compile_begin = Time.now
-    msg = `2>&1 cl #{@cflags} /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src}" #{@libs}`
+    msg = `2>&1 cl #{@cflags} #{@pch_cflags} /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src}" #{@libs}`
     puts "#{Time.now - compile_begin} sec."
     msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
 
@@ -103,7 +104,7 @@ class InstantC
     pch = "#{src}.pch"
     pch_flags = %[/FI"#{src}" /Fp"#{pch}"]
     system %[cl /c #{@cflags} #{pch_flags} /Yc"#{src}" /Fonul /Tpnul > nul]
-    @cflags += %[ #{pch_flags} /Yu"#{src}"]
+    @pch_cflags = %[#{pch_flags} /Yu"#{src}"]
   end
 end
 
