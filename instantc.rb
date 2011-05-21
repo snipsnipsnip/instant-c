@@ -34,22 +34,22 @@ class InstantC
       end
 
       code = line
-      Tempfile.open("instantc", @workdir) do |f|
-        f << header << code << footer
-        f.close
+      src = Tempfile.open("instantc", @workdir)
+      src << header << code << footer
+      src.close(false)
 
-        exe = "#{f.path}.exe"
-        compile_begin = Time.now
-        msg = `cl /W2 /EHsc /WX /Od /nologo /Fe"#{exe}" /Fo"#{f.path}.obj" /Tp"#{f.path}" 2>&1`
-        puts "#{Time.now - compile_begin} sec."
-        msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
-        
-        if $? == 0 && File.exist?(exe)
-          result = `"#{exe}" #{@argv} 2>&1`
-          result.strip!
-          puts result unless result.empty?
-          puts "エラー終了しました コード: #{$? >> 8}" if $? != 0
-        end
+      exe = "#{src.path}.exe"
+      obj = "#{src.path}.obj"
+      compile_begin = Time.now
+      msg = `cl /W2 /EHsc /WX /Od /nologo /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src.path}" user32.lib 2>&1`
+      puts "#{Time.now - compile_begin} sec."
+      msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
+      
+      if $? == 0
+        result = `"#{exe}" #{@argv} 2>&1`
+        result.strip!
+        puts result unless result.empty?
+        puts "エラー終了しました コード: #{$? >> 8}" if $? != 0
       end
     end
   end
