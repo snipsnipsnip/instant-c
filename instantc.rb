@@ -18,29 +18,8 @@ class InstantC
   end
 
   def start
+    init_pch
     puts 'exitÇ∆Ç©quitÇ∆Ç©qÇ∆Ç©Ctrl+CÇ∆Ç©Ctrl+ZÇ∆Ç©Ç≈èIóπÇµÇ‹Ç∑ http://j.mp/instantc'
-    
-    pch_src = Tempfile.open("instantc-pch", @workdir)
-    
-    %w[stdio stdlib string ctype math time windows].each do |h|
-      pch_src.puts "#include <#{h}.h>"
-    end
-    %w[string vector iterator functional iostream
-      list map memory deque algorithm sstream].each do |h|
-      pch_src.puts "#include <#{h}>"
-    end
-    
-    pch_src.close
-    
-    pch_obj = "#{pch_src.path}.obj"
-    pch_pch = "#{pch_src.path}.pch"
-    
-    pch_flags = %[/FI"#{pch_src.path}" /Fp"#{pch_pch}"]
-    
-    system %[cl /c #{@cflags} #{pch_flags} /Yc"#{pch_src.path}" /Fo"#{pch_obj}" /Tp"#{pch_src.path}"]
-    
-    @cflags += %[ #{pch_flags} /Yu"#{pch_src.path}"]
-    
     while true
       line = prompt and run line or break
     end
@@ -95,7 +74,30 @@ class InstantC
   end
 
   def footer
-    ";return 0;}"
+    "\n;return 0;}"
+  end
+  
+  def init_pch
+    pch_src = Tempfile.open("instantc-pch", @workdir)
+    
+    %w[stdio stdlib string ctype math time windows].each do |h|
+      pch_src.puts "#include <#{h}.h>"
+    end
+    %w[string vector iterator functional iostream
+      list map memory deque algorithm sstream].each do |h|
+      pch_src.puts "#include <#{h}>"
+    end
+    
+    pch_src.close
+    
+    pch_obj = "#{pch_src.path}.obj"
+    pch_pch = "#{pch_src.path}.pch"
+    
+    pch_flags = %[/FI"#{pch_src.path}" /Fp"#{pch_pch}"]
+    
+    system %[cl /c #{@cflags} #{pch_flags} /Yc"#{pch_src.path}" /Fo"#{pch_obj}" /Tp"#{pch_src.path}" > nul]
+    
+    @cflags += %[ #{pch_flags} /Yu"#{pch_src.path}"]
   end
 end
 
