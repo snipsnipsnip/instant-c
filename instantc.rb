@@ -50,9 +50,7 @@ class InstantC
     msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
     
     if $? == 0
-      result = `"#{exe}" #{@argv} 2>&1`
-      result.strip!
-      puts result unless result.empty?
+      system %["#{exe}" #{@argv}]
       puts "エラー終了しました コード: #{$? >> 8}" if $? != 0
     end
     
@@ -78,7 +76,7 @@ class InstantC
   end
   
   def init_pch
-    @pch_src = Tempfile.open("instantc-pch", @workdir)
+    @pch_src = pch_src = Tempfile.open("instantc-pch", @workdir)
     
     %w[stdio stdlib string ctype math time windows].each do |h|
       pch_src.puts "#include <#{h}.h>"
