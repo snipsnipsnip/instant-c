@@ -1,13 +1,18 @@
 >> printf("hoge")
 hoge
->> std::vector<int> v(5, 10); std::copy(v.begin(), v.end(), std::ostream_iterator<int>(std::cout, "\n"))
+>> int hoge; printf("hoge: "); scanf("%d", &hoge); printf("%d", hoge * 2)
+hoge: 21
+42
+>> vector<int> v(5, 10); copy(v.begin(), v.end(), ostream_iterator<int>(cout, "\n"))
 10
 10
 10
 10
 10
+
 >> char buf[80]; printf("%s", fgets(buf, 80, fopen("instantc.rb", "r")))
 #!/usr/bin/ruby
+
 >> printf("%s", argv[1])
 (null)
 >> #args = hoge

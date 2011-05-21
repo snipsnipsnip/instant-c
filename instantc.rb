@@ -51,7 +51,11 @@ class InstantC
     
     if $? == 0
       system %["#{exe}" #{@argv}]
-      puts "エラー終了しました コード: #{$? >> 8}" if $? != 0
+      if $? == 0
+        puts
+      else
+        puts "エラー終了しました コード: #{$? >> 8}"
+      end
     end
     
     true
@@ -85,7 +89,7 @@ class InstantC
       list map memory deque algorithm sstream].each do |h|
       pch_src.puts "#include <#{h}>"
     end
-    
+    pch_src.puts "using namespace std;"
     pch_src.close
     
     pch_obj = "#{pch_src.path}.obj"
