@@ -1,7 +1,6 @@
 #!/usr/bin/ruby
 
 require 'tmpdir'
-require 'tempfile'
 
 class InstantC
   def self.main(*argv)
@@ -15,6 +14,7 @@ class InstantC
     @cflags = '/nologo /W2 /EHsc /WX /Od'
     @libs = 'user32.lib'
     @prompt = ">> "
+    @count = 0
   end
 
   def start
@@ -38,14 +38,17 @@ class InstantC
     end
 
     code = line
-    src = Tempfile.open("instantc", @workdir)
-    src << header << code << footer
-    src.close
+    name = gen_filename
+    src = "#{name}.c"
+    exe = "#{name}.exe"
+    obj = "#{name}.obj"
+    
+    open(src, 'w') do |f|
+      f << header << code << footer
+    end
 
-    exe = "#{src.path}.exe"
-    obj = "#{src.path}.obj"
     compile_begin = Time.now
-    msg = `2>&1 cl #{@cflags} /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src.path}" #{@libs}`
+    msg = `2>&1 cl #{@cflags} /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src}" #{@libs}`
     puts "#{Time.now - compile_begin} sec."
     msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
 
@@ -59,6 +62,11 @@ class InstantC
     end
     
     true
+  end
+  
+  def gen_filename
+    @count += 1
+    File.join(@workdir, @count.to_s)
   end
   
   def prompt
@@ -80,22 +88,22 @@ class InstantC
   end
   
   def init_pch
-    @pch_src = pch_src = Tempfile.open("instantc-pch", @workdir)
-    
-    %w[stdio stdlib string ctype math time windows].each do |h|
-      pch_src.puts "#include <#{h}.h>"
+    src = "#{gen_filename}.h"
+    open(src, "w") do |f|
+      %w[stdio stdlib string ctype math time windows].each do |h|
+        f.puts "#include <#{h}.h>"
+      end
+      %w[string vector iterator functional iostream
+        list map memory deque algorithm sstream].each do |h|
+        f.puts "#include <#{h}>"
+      end
+      f.puts "using namespace std;"
     end
-    %w[string vector iterator functional iostream
-      list map memory deque algorithm sstream].each do |h|
-      pch_src.puts "#include <#{h}>"
-    end
-    pch_src.puts "using namespace std;"
-    pch_src.close
     
-    pch_pch = "#{pch_src.path}.pch"
-    pch_flags = %[/FI"#{pch_src.path}" /Fp"#{pch_pch}"]
-    system %[cl /c #{@cflags} #{pch_flags} /Yc"#{pch_src.path}" /Fonul /Tpnul > nul]
-    @cflags += %[ #{pch_flags} /Yu"#{pch_src.path}"]
+    pch = "#{src}.pch"
+    pch_flags = %[/FI"#{src}" /Fp"#{pch}"]
+    system %[cl /c #{@cflags} #{pch_flags} /Yc"#{src}" /Fonul /Tpnul > nul]
+    @cflags += %[ #{pch_flags} /Yu"#{src}"]
   end
 end
 
