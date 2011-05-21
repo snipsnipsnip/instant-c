@@ -78,7 +78,7 @@ class InstantC
   end
   
   def init_pch
-    pch_src = Tempfile.open("instantc-pch", @workdir)
+    @pch_src = Tempfile.open("instantc-pch", @workdir)
     
     %w[stdio stdlib string ctype math time windows].each do |h|
       pch_src.puts "#include <#{h}.h>"
