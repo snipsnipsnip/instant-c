@@ -12,12 +12,35 @@ class InstantC
 
   def initialize(workdir)
     @workdir = workdir
-    @cflags = '/nologo /W2 /EHsc /WX /Od user32.lib'
+    @cflags = '/nologo /W2 /EHsc /WX /Od'
+    @libs = 'user32.lib'
     @prompt = ">> "
   end
 
   def start
     puts 'exitÇ∆Ç©quitÇ∆Ç©qÇ∆Ç©Ctrl+CÇ∆Ç©Ctrl+ZÇ∆Ç©Ç≈èIóπÇµÇ‹Ç∑ http://j.mp/instantc'
+    
+    pch_src = Tempfile.open("instantc-pch", @workdir)
+    
+    %w[stdio stdlib string ctype math time windows].each do |h|
+      pch_src.puts "#include <#{h}.h>"
+    end
+    %w[string vector iterator functional iostream
+      list map memory deque algorithm sstream].each do |h|
+      pch_src.puts "#include <#{h}>"
+    end
+    
+    pch_src.close
+    
+    pch_obj = "#{pch_src.path}.obj"
+    pch_pch = "#{pch_src.path}.pch"
+    
+    pch_flags = %[/FI"#{pch_src.path}" /Fp"#{pch_pch}"]
+    
+    system %[cl /c #{@cflags} #{pch_flags} /Yc"#{pch_src.path}" /Fo"#{pch_obj}" /Tp"#{pch_src.path}"]
+    
+    @cflags += %[ #{pch_flags} /Yu"#{pch_src.path}"]
+    
     while true
       line = prompt and run line or break
     end
@@ -38,12 +61,12 @@ class InstantC
     code = line
     src = Tempfile.open("instantc", @workdir)
     src << header << code << footer
-    src.close(false)
+    src.close
 
     exe = "#{src.path}.exe"
     obj = "#{src.path}.obj"
     compile_begin = Time.now
-    msg = `2>&1 cl #{@cflags} /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src.path}"`
+    msg = `2>&1 cl #{@cflags} /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src.path}" #{@libs}`
     puts "#{Time.now - compile_begin} sec."
     msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
     
@@ -68,12 +91,7 @@ class InstantC
   end
   
   def header
-    @header ||= begin
-      %w[stdio stdlib string ctype math time windows].map {|h| "#include <#{h}.h>" } +
-      %w[string vector iterator functional iostream
-        list map memory deque algorithm sstream].map {|h| "#include <#{h}>" } +
-      ["\nint main(int argc, char **argv) {"]
-    end.join("\n")
+    "int main(int argc, char **argv) {"
   end
 
   def footer
