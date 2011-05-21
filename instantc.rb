@@ -48,7 +48,7 @@ class InstantC
     msg = `2>&1 cl #{@cflags} /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src.path}" #{@libs}`
     puts "#{Time.now - compile_begin} sec."
     msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
-    
+
     if $? == 0
       system %["#{exe}" #{@argv}]
       if $? == 0
@@ -92,13 +92,9 @@ class InstantC
     pch_src.puts "using namespace std;"
     pch_src.close
     
-    pch_obj = "#{pch_src.path}.obj"
     pch_pch = "#{pch_src.path}.pch"
-    
     pch_flags = %[/FI"#{pch_src.path}" /Fp"#{pch_pch}"]
-    
-    system %[cl /c #{@cflags} #{pch_flags} /Yc"#{pch_src.path}" /Fo"#{pch_obj}" /Tp"#{pch_src.path}" > nul]
-    
+    system %[cl /c #{@cflags} #{pch_flags} /Yc"#{pch_src.path}" /Fonul /Tpnul > nul]
     @cflags += %[ #{pch_flags} /Yu"#{pch_src.path}"]
   end
 end
