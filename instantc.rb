@@ -12,6 +12,7 @@ class InstantC
 
   def initialize(workdir)
     @workdir = workdir
+    @cflags = '/nologo /W2 /EHsc /WX /Od user32.lib'
   end
 
   def start
@@ -41,7 +42,7 @@ class InstantC
       exe = "#{src.path}.exe"
       obj = "#{src.path}.obj"
       compile_begin = Time.now
-      msg = `cl /W2 /EHsc /WX /Od /nologo /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src.path}" user32.lib 2>&1`
+      msg = `2>&1 cl #{@cflags} /Fe"#{exe}" /Fo"#{obj}" /Tp"#{src.path}"`
       puts "#{Time.now - compile_begin} sec."
       msg.scan(/(?:error|warning)[^:]+:\s*(.*)/) {|s| puts s }
       
