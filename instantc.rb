@@ -25,12 +25,16 @@ class InstantC
       list map memory deque algorithm sstream
     ]
     @preface = "using namespace std;"
+    @cont = nil
   end
 
   def start
     mode = File.umask(0077)
     compile_pch
-    puts 'exitとかquitとかqとかCtrl+CとかCtrl+Zとかで終了します http://j.mp/instantc'
+    puts '行末にセミコロンをうつと複数行モードになります 空行で実行します'
+    puts 'exitとかquitとかqとかCtrl+CとかCtrl+Zとかで終了します'
+    puts 'http://j.mp/instantc'
+    
     while true
       line = prompt and run line or break
     end
@@ -43,7 +47,7 @@ class InstantC
     return true if line.empty?
     
     return false if line[0] == ?\C-d || line =~ /\Aexit|quit|q\z/i
-    
+
     if line =~ /\A\s*@/i
       if $'.strip!
         run_as_ruby $'
@@ -88,12 +92,29 @@ class InstantC
   end
   
   def prompt
-    print @prompt
+    print @cont ? "?#{@prompt[1..-1]}" : @prompt
     begin
       line = STDIN.gets
     rescue Interrupt
     end
-    line.strip! if line
+
+    if line
+      line.strip!
+
+      if @cont
+        if line.empty?
+          line = @cont
+          @cont = nil
+        else
+          @cont << ?; << line
+          line = ""
+        end
+      elsif line =~ /;\s*\z/
+        @cont = line
+        line = ""
+      end
+    end
+    
     line
   end
   
