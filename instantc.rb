@@ -31,7 +31,7 @@ class InstantC
   def start
     mode = File.umask(0077)
     compile_pch
-    puts '行末にセミコロンをうつと複数行モードになります 空行で実行します'
+    puts '行末にセミコロンをうつと行がつづきます'
     puts 'exitとかquitとかqとかCtrl+CとかCtrl+Zとかで終了します'
     puts 'http://j.mp/instantc'
     
@@ -100,18 +100,18 @@ class InstantC
 
     if line
       line.strip!
-
-      if @cont
-        if line.empty?
-          line = @cont
-          @cont = nil
+      
+      if line =~ /;\s*\z/
+        if @cont
+          @cont << line
         else
-          @cont << ?; << line
-          line = ""
+          @cont = line
         end
-      elsif line =~ /;\s*\z/
-        @cont = line
         line = ""
+      elsif @cont
+        @cont << line
+        line = @cont
+        @cont = nil
       end
     end
     
