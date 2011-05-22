@@ -30,7 +30,7 @@ class InstantC
 
   def start
     mode = File.umask(0077)
-    compile_pch
+    compile
     puts '行末にセミコロンをうつと行がつづきます'
     puts 'exitとかquitとかqとかCtrl+CとかCtrl+Zとかで終了します'
     puts 'http://j.mp/instantc'
@@ -50,7 +50,7 @@ class InstantC
 
     if line =~ /\A\s*#/
       line = $' if $'.strip!
-      decl line
+      declare line
       return true
     elsif line =~ /\A\s*@/
       line = $' if $'.strip!
@@ -120,19 +120,19 @@ class InstantC
   end
   
   def header
-    "int main(int argc, char **argv) {"
+    @decls.reject {|x| x.frozen? }.join("\n") +
+    "\nint main(int argc, char **argv) {"
   end
 
   def footer
     "\n;return 0;}"
   end
 
-  def decl(code)
+  def declare(code)
     @decls << code
-    compile_pch
   end
   
-  def compile_pch
+  def compile
     src, pch = make_filename('h', 'pch')
     open(src, 'w') do |f|
       @headers.each do |h|
@@ -140,7 +140,9 @@ class InstantC
       end
       f.puts @decls
     end
-    
+
+    @decls.each {|x| x.freeze }
+
     pch_flags = %[/FI"#{src}" /Fp"#{pch}"]
     msg = `2>&1 cl /c #{@cflags} #{pch_flags} /Yc"#{src}" /Fonul /Tpnul`
     puts msg unless $? == 0
