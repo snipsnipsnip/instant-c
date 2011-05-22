@@ -1,23 +1,20 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby -Ks
+# coding: sjis
 
 require 'tmpdir'
 
 class InstantC
   def self.main(*argv)
-    mode = File.umask(0077)
-    Dir.mktmpdir('instantc') do |dir|
+    BuildDir.open do |dir|
       new(dir).start
     end
-  ensure
-    File.umask mode
   end
 
-  def initialize(workdir)
-    @workdir = workdir
+  def initialize(dir)
+    @dir = dir
     @cflags = '/nologo /W2 /EHsc /WX /Od'
     @libs = 'user32.lib'
     @prompt = ">> "
-    @count = 0
     @pch_cflags = ''
     @_ = nil
     @argv = ''
@@ -31,11 +28,14 @@ class InstantC
   end
 
   def start
+    mode = File.umask(0077)
     compile_pch
     puts 'exitÇ∆Ç©quitÇ∆Ç©qÇ∆Ç©Ctrl+CÇ∆Ç©Ctrl+ZÇ∆Ç©Ç≈èIóπÇµÇ‹Ç∑ http://j.mp/instantc'
     while true
       line = prompt and run line or break
     end
+  ensure
+    File.umask mode
   end
 
   private
@@ -54,10 +54,7 @@ class InstantC
     end
 
     code = line
-    name = gen_filename
-    src = "#{name}.c"
-    exe = "#{name}.exe"
-    obj = "#{name}.obj"
+    src, exe, obj = make_filename('c', 'exe', 'obj')
     
     open(src, 'w') do |f|
       f << header << code << footer
@@ -90,11 +87,6 @@ class InstantC
     e.backtrace.each {|b| puts "  from #{b}" }
   end
   
-  def gen_filename
-    @count += 1
-    File.join(@workdir, @count.to_s)
-  end
-  
   def prompt
     print @prompt
     begin
@@ -114,20 +106,49 @@ class InstantC
   end
   
   def compile_pch
-    src = "#{gen_filename}.h"
-    open(src, "w") do |f|
+    src, pch = make_filename('h', 'pch')
+    open(src, 'w') do |f|
       @headers.each do |h|
         f.puts "#include <#{h}>"
       end
       f.puts @preface
     end
     
-    pch = "#{src}.pch"
     pch_flags = %[/FI"#{src}" /Fp"#{pch}"]
     msg = `2>&1 cl /c #{@cflags} #{pch_flags} /Yc"#{src}" /Fonul /Tpnul`
     puts msg unless $? == 0
     @pch_cflags = %[#{pch_flags} /Yu"#{src}"]
     msg
+  end
+  
+  def make_filename(*ext)
+    @dir.make_filename(*ext)
+  end
+  
+  class BuildDir
+    def self.open(dir=nil, &blk)
+      if dir
+        yield new dir
+      else
+        Dir.mktmpdir('instantc') do |tmpdir|
+          yield new tmpdir
+        end
+      end
+    end
+  
+    attr_reader :dir
+    alias to_s dir
+    
+    def initialize(dir)
+      @dir = dir
+      @file_count = 0
+    end
+    
+    def make_filename(*exts)
+      @file_count += 1
+      name = File.join(@dir, @file_count.to_s)
+      exts.map {|e| "#{name}.#{e}" }
+    end
   end
 end
 
