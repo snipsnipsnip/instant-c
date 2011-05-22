@@ -24,7 +24,7 @@ class InstantC
       string vector iterator functional iostream
       list map memory deque algorithm sstream
     ]
-    @preface = "using namespace std;"
+    @decls = ["using namespace std;"]
     @cont = nil
   end
 
@@ -48,12 +48,13 @@ class InstantC
     
     return false if line[0] == ?\C-d || line =~ /\Aexit|quit|q\z/i
 
-    if line =~ /\A\s*@/i
-      if $'.strip!
-        run_as_ruby $'
-      else
-        run_as_ruby line
-      end
+    if line =~ /\A\s*#/
+      line = $' if $'.strip!
+      decl line
+      return true
+    elsif line =~ /\A\s*@/
+      line = $' if $'.strip!
+      run_as_ruby line
       return true
     end
 
@@ -101,7 +102,7 @@ class InstantC
     if line
       line.strip!
       
-      if line =~ /;\s*\z/
+      if line =~ /;\s*\z/ 
         if @cont
           @cont << line
         else
@@ -125,6 +126,11 @@ class InstantC
   def footer
     "\n;return 0;}"
   end
+
+  def decl(code)
+    @decls << code
+    compile_pch
+  end
   
   def compile_pch
     src, pch = make_filename('h', 'pch')
@@ -132,7 +138,7 @@ class InstantC
       @headers.each do |h|
         f.puts "#include <#{h}>"
       end
-      f.puts @preface
+      f.puts @decls
     end
     
     pch_flags = %[/FI"#{src}" /Fp"#{pch}"]
