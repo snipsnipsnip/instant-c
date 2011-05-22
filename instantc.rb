@@ -4,9 +4,12 @@ require 'tmpdir'
 
 class InstantC
   def self.main(*argv)
+    mode = File.umask(0077)
     Dir.mktmpdir('instantc') do |dir|
       new(dir).start
     end
+  ensure
+    File.umask mode
   end
 
   def initialize(workdir)
