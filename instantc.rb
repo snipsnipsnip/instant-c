@@ -12,7 +12,7 @@ class InstantC
 
   def initialize(dir)
     @dir = dir
-    @cflags = '/nologo /W2 /EHsc /WX /Od'
+    @cflags = '/nologo /W2 /EHsc /Od /D_CRT_SECURE_NO_DEPRECATE'
     @libs = 'user32.lib'
     @prompt = ">> "
     @pch_cflags = ''
