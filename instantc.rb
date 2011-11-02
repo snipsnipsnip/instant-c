@@ -154,7 +154,7 @@ class InstantC
   end
 
   def declare(code)
-    @decls << code
+    @decls << code.strip
   end
   
   def precompile
