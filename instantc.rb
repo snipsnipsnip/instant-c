@@ -6,12 +6,12 @@ require 'tmpdir'
 
 class InstantC
   def self.main(*argv)
-    if argv.include?("-h")
+    if argv.include?("-h") || argv.include?("--help") || argv.include?("--version")
       help
       return
     end
-    cxx = argv.include?("-x")
-    precompile = argv.include?("-p")
+    cxx = argv.include?("-x") || argv.include?("--cxx-headers")
+    precompile = argv.include?("-p") || argv.include?("--precompile")
     BuildDir.open do |dir|
       new(cxx, Compiler.guess(dir)).start(precompile)
     end
@@ -20,11 +20,14 @@ class InstantC
   def self.help
     puts 'Instant C, Interactive C or Read-Compile-Execute-Loop v0.1'
     puts 'http://j.mp/instantc'
-    puts '行末に演算子をうったり、字下げすると行がつづきます'
-    puts '関数や変数は # int hoge() { puts("fuga"); } のような感じで宣言できます'
-    puts "-x オプションをつけるとC++のvectorとかが使えるようになります"
+    puts '行末に演算子を置いたり、字下げすると行がつづきます'
+    puts '関数や変数は'
+    puts '  #define HOGE 10'
+    puts '  # int hoge() { puts("fuga"); }'
+    puts '  # int moga = 30;'
+    puts ' という感じで宣言できます'
+    puts "-x オプションをつけるとC++のヘッダをいくらかincludeします"
     puts "-p オプションをつけると起動時にプリコンパイルします"
-    puts '関数の定義とかのしかたは help や -h オプションで見れます'
     puts 'exit、quit、q、Ctrl+C、Ctrl+Z、Ctrl+Dなどで終了します'
   end
 
@@ -35,6 +38,7 @@ class InstantC
     @argv = ''
     headers = %w[cstdio cstdlib cstring cctype cmath ctime]
     
+    @cxx = cxx
     if cxx
       headers.concat %w[
         string vector iterator functional iostream
@@ -54,7 +58,8 @@ class InstantC
   def start(precompile)
     mode = File.umask(0077)
     puts 'http://j.mp/instantc'
-    puts '関数の定義とかのしかたは help や -h オプションで見れます'
+    puts "#{@cxx ? 'cout' : 'printf'}とかできます"
+    puts '関数の定義のしかたなどは help と打ってみてください'
     puts 'exit、quit、q、Ctrl+C、Ctrl+Z、Ctrl+Dなどで終了します'
     
     precompile if precompile
@@ -159,7 +164,7 @@ class InstantC
   
   def precompile
     begin
-      puts 'プリコンパイル中.. (Ctrl+Cや-fスイッチでスキップできます)'
+      puts 'プリコンパイル中.. (Ctrl+Cでスキップできます)'
       @compiler.precompile(@decls)
     rescue Interrupt
       puts "中断しました"
