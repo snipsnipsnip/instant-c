@@ -1,4 +1,3 @@
-
 #!/usr/bin/ruby -Ks
 # coding: sjis
 
@@ -34,6 +33,7 @@ class InstantC
   def initialize(cxx, compiler)
     @compiler = compiler
     @prompt = ">> "
+    @cont_prompt = "?>"
     @_ = nil
     @argv = ''
     headers = %w[cstdio cstdlib cstring cctype cmath ctime]
@@ -116,7 +116,7 @@ class InstantC
   end
   
   def prompt
-    print @cont ? "?#{@prompt[1..-1]}" : @prompt
+    print @cont ? @cont_prompt : @prompt
     begin
       line = STDIN.gets
     rescue Interrupt
