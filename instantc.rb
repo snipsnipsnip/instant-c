@@ -10,9 +10,9 @@ class InstantC
       return
     end
     cxx = argv.include?("-x") || argv.include?("--cxx-headers")
-    precompile = argv.include?("-p") || argv.include?("--precompile")
+    no_precompile = argv.include?("-f") || argv.include?("--no-precompile")
     BuildDir.open do |dir|
-      new(cxx, Compiler.guess(dir)).start(precompile)
+      new(cxx, Compiler.guess(dir)).start(no_precompile)
     end
   end
   
@@ -25,8 +25,8 @@ class InstantC
     puts '  # int hoge() { puts("fuga"); }'
     puts '  # int moga = 30;'
     puts ' という感じで宣言できます'
-    puts "-x オプションをつけるとC++のヘッダをいくらかincludeします"
-    puts "-p オプションをつけると起動時にプリコンパイルします"
+    puts "-x, --cxx オプションをつけるとC++のヘッダをいくつかincludeします"
+    puts "-f, --no-precompile オプションは起動時のプリコンパイルをやめます"
     puts 'exit、quit、q、Ctrl+C、Ctrl+Z、Ctrl+Dなどで終了します'
   end
 
@@ -55,14 +55,14 @@ class InstantC
     @cont = nil
   end
 
-  def start(precompile)
+  def start(no_precompile)
     mode = File.umask(0077)
     puts 'http://j.mp/instantc'
     puts "#{@cxx ? 'cout' : 'printf'}とかできます"
     puts '関数の定義のしかたなどは help と打ってみてください'
     puts 'exit、quit、q、Ctrl+C、Ctrl+Z、Ctrl+Dなどで終了します'
     
-    precompile if precompile
+    precompile unless no_precompile
     
     while true
       line = prompt and run line or break
