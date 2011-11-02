@@ -1,3 +1,4 @@
+@ruby -x "%~f0" %* & exit /b
 #!/usr/bin/ruby -Ks
 # coding: sjis
 
