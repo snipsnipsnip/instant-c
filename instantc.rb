@@ -49,7 +49,7 @@ class InstantC
     @decls << "using namespace std;"
     
     def @decls.inspect
-      each_with_index.map {|x,i| "\n  %02d#{x.frozen? ? "!" : ":"} #{x.gsub("\n", "\n      ")}" % (i + 1) }.join
+      each_with_index.map {|x,i| "\n  %02d#{x.frozen? ? "!" : ":"} #{x.gsub("\n", "\n      ")}" % i }.join
     end
     
     @cont = nil
