@@ -1,4 +1,3 @@
-@start ruby -x "%~f0" %* & exit /b
 #!/usr/bin/ruby -Ks
 # coding: sjis
 
@@ -14,21 +13,21 @@ class InstantC
       puts "-p オプションをつけると起動時にプリコンパイルします"
       puts "-x オプションをつけるとC++のvectorとかが使えるようになります (-pと併用はおすすめ)"
     end
+    cxx = argv.include?("-x")
+    precompile = argv.include?("-p")
     BuildDir.open do |dir|
-      new(Compiler.guess(dir)).start
+      new(cxx, Compiler.guess(dir)).start(precompile)
     end
   end
 
-  def initialize(compiler)
+  def initialize(cxx, compiler)
     @compiler = compiler
     @prompt = ">> "
     @_ = nil
     @argv = ''
-    @precompiled_decls = []
-    
     headers = %w[cstdio cstdlib cstring cctype cmath ctime]
     
-    if ARGV.include?("-x")
+    if cxx
       headers.concat %w[
         string vector iterator functional iostream
         list map memory deque algorithm sstream
@@ -36,17 +35,21 @@ class InstantC
     end
     @decls = headers.map {|h| "#include <#{h}>" }
     @decls << "using namespace std;"
+    
+    def @decls.inspect
+      each_with_index.map {|x,i| "\n  %02d: #{x}" % (i + 1) }.join
+    end
+    
     @cont = nil
   end
 
-  def start
+  def start(precompile)
     mode = File.umask(0077)
-    puts 'instantc cel http://j.mp/instantc'
-    puts '行末に演算子をうったり、字下げすると行がつづきます'
+    puts 'http://j.mp/instantc'
     puts '関数の定義とかのしかたは-hオプションで見れます'
     puts 'exitとかquitとかqとかCtrl+CとかCtrl+Zとかで終了します'
     
-    precompile if ARGV.include?("-p")
+    precompile if precompile
     
     while true
       line = prompt and run line or break
@@ -112,7 +115,7 @@ class InstantC
 
     return nil unless line
     
-    if line =~ /[-;{\\+*\/%^,.(&|<=>]\s*\z/ || line =~ /\A\s/
+    if line =~ /\S\s*[-;{\\+*\/%^,.(&|<=>]\s*\z/ || line =~ /\A\s/
       if @cont
         @cont << line
       else
@@ -144,16 +147,13 @@ class InstantC
   end
   
   def precompile
-    hmm = @precompiled_decls + @decls
     begin
       puts 'プリコンパイル中.. (Ctrl+Cや-fスイッチでスキップできます)'
-      @compiler.precompile(hmm)
+      @compiler.precompile(@decls)
     rescue Interrupt
       puts "中断しました"
       return
     end
-    @precompiled_decls = hmm
-    @decls.clear
   end
   
   class BuildDir
