@@ -7,18 +7,25 @@ require 'tmpdir'
 class InstantC
   def self.main(*argv)
     if argv.include?("-h")
-      puts 'Instant C, Interactive C or Read-Compile-Execute-Loop'
-      puts 'http://j.mp/instantc'
-      puts 'è¡Œæœ«ã«æ¼”ç®—å­ã‚’ã†ã£ãŸã‚Šã€å­—ä¸‹ã’ã™ã‚‹ã¨è¡ŒãŒã¤ã¥ãã¾ã™'
-      puts 'é–¢æ•°ã‚„å¤‰æ•°ã¯ # int hoge() { puts("fuga"); } ã¿ãŸã„ãªæ„Ÿã˜ã§å®£è¨€ã§ãã¾ã™'
-      puts "-p ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’ã¤ã‘ã‚‹ã¨èµ·å‹•æ™‚ã«ãƒ—ãƒªã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã—ã¾ã™"
-      puts "-x ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’ã¤ã‘ã‚‹ã¨C++ã®vectorã¨ã‹ãŒä½¿ãˆã‚‹ã‚ˆã†ã«ãªã‚Šã¾ã™ (-pã¨ä½µç”¨ã¯ãŠã™ã™ã‚)"
+      help
+      return
     end
     cxx = argv.include?("-x")
     precompile = argv.include?("-p")
     BuildDir.open do |dir|
       new(cxx, Compiler.guess(dir)).start(precompile)
     end
+  end
+  
+  def self.help
+    puts 'Instant C, Interactive C or Read-Compile-Execute-Loop v0.1'
+    puts 'http://j.mp/instantc'
+    puts 's––‚É‰‰Zq‚ğ‚¤‚Á‚½‚èAš‰º‚°‚·‚é‚Æs‚ª‚Â‚Ã‚«‚Ü‚·'
+    puts 'ŠÖ”‚â•Ï”‚Í # int hoge() { puts("fuga"); } ‚Ì‚æ‚¤‚ÈŠ´‚¶‚ÅéŒ¾‚Å‚«‚Ü‚·'
+    puts "-x ƒIƒvƒVƒ‡ƒ“‚ğ‚Â‚¯‚é‚ÆC++‚Ìvector‚Æ‚©‚ªg‚¦‚é‚æ‚¤‚É‚È‚è‚Ü‚·"
+    puts "-p ƒIƒvƒVƒ‡ƒ“‚ğ‚Â‚¯‚é‚Æ‹N“®‚ÉƒvƒŠƒRƒ“ƒpƒCƒ‹‚µ‚Ü‚·"
+    puts 'ŠÖ”‚Ì’è‹`‚Æ‚©‚Ì‚µ‚©‚½‚Í help ‚â -h ƒIƒvƒVƒ‡ƒ“‚ÅŒ©‚ê‚Ü‚·'
+    puts 'exitAquitAqACtrl+CACtrl+ZACtrl+D‚È‚Ç‚ÅI—¹‚µ‚Ü‚·'
   end
 
   def initialize(cxx, compiler)
@@ -47,8 +54,8 @@ class InstantC
   def start(precompile)
     mode = File.umask(0077)
     puts 'http://j.mp/instantc'
-    puts 'é–¢æ•°ã®å®šç¾©ã¨ã‹ã®ã—ã‹ãŸã¯-hã‚ªãƒ—ã‚·ãƒ§ãƒ³ã§è¦‹ã‚Œã¾ã™'
-    puts 'exitã¨ã‹quitã¨ã‹qã¨ã‹Ctrl+Cã¨ã‹Ctrl+Zã¨ã‹ã§çµ‚äº†ã—ã¾ã™'
+    puts 'ŠÖ”‚Ì’è‹`‚Æ‚©‚Ì‚µ‚©‚½‚Í help ‚â -h ƒIƒvƒVƒ‡ƒ“‚ÅŒ©‚ê‚Ü‚·'
+    puts 'exitAquitAqACtrl+CACtrl+ZACtrl+D‚È‚Ç‚ÅI—¹‚µ‚Ü‚·'
     
     precompile if precompile
     
@@ -64,6 +71,9 @@ class InstantC
     case line
     when /\A(?:\C-d|exit|quit|q)\s*\z/i
       return false
+    when /\Ahelp\s*\z/i
+      self.class.help
+      return true
     when /\A\s*\z/
       return true
     when /\A\s*#/
@@ -82,7 +92,7 @@ class InstantC
       if system %["#{exe}" #{@argv}]
         puts
       else
-        puts "ã‚¨ãƒ©ãƒ¼çµ‚äº†ã—ã¾ã—ãŸ ã‚³ãƒ¼ãƒ‰: #{$? >> 8}"
+        puts "ƒGƒ‰[I—¹‚µ‚Ü‚µ‚½ ƒR[ƒh: #{$? >> 8}"
       end
     end
     
@@ -149,10 +159,10 @@ class InstantC
   
   def precompile
     begin
-      puts 'ãƒ—ãƒªã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ä¸­.. (Ctrl+Cã‚„-fã‚¹ã‚¤ãƒƒãƒã§ã‚¹ã‚­ãƒƒãƒ—ã§ãã¾ã™)'
+      puts 'ƒvƒŠƒRƒ“ƒpƒCƒ‹’†.. (Ctrl+C‚â-fƒXƒCƒbƒ`‚ÅƒXƒLƒbƒv‚Å‚«‚Ü‚·)'
       @compiler.precompile(@decls)
     rescue Interrupt
-      puts "ä¸­æ–­ã—ã¾ã—ãŸ"
+      puts "’†’f‚µ‚Ü‚µ‚½"
       return
     end
     @decls.each {|d| d.freeze }
