@@ -7,6 +7,8 @@ Instant C, Interactive C or Dump-Compile-Execute-Loop (heavily relying on MSVC)
 ----
 C言語をちょっと試したい時に便利なツールです
 
+昔のBASIC風味のラインエディットをしながら繰り返しいじる機能もあります
+
 いまのところVisual C++にしか対応していません
 
 `printf("hoge") `など、Cコードの断片を書いてリターンを押すと、以下のようなテンプレにあてはめてコンパイルし、その場で実行します
